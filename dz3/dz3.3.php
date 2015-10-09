@@ -1,5 +1,5 @@
 <h1>T i m e s t a m p : t i m e и m k t i m </h1>
-
+//
 <h3>Задача 1</h3>
 <?php
 /*  В ы в е д и т е   т е к у щ е е   в р е м я   в   ф о р м а т е   t i m e s t a m p
