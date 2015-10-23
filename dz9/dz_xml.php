@@ -61,23 +61,35 @@ $new= new News();
  */
 class RssNews
 {
-    public function buildsRss()
+    public function buildsRss(News $news)
     {
-        if ($new->getNews()){
-            $open = fopen('rss_tape.xml','a+');
-            fwrite($open,"<tape>");
-            fclose($open);
-            foreach($new->getNews() as $value){
-                $open = fopen('rss_tape.xml','a+');
-                fwrite($open,"\n  <subject>$value[0]</subject>");
-                fwrite($open,"\n     <address>$value[1]</address>");
-                fwrite($open,"\n     <tags>$value[2]</tags>");
-                fwrite($open,"\n     <date>$value[3]</date>");
-            }
-            fwrite($open,"\n</tape>");
+        $array_news = $news->getNews();
+        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom -> formatOutput = true;// создает отступы и дополняет пробелы
+        $rss = $dom->createElement('rss');//создает новый элемент
+        $dom-> appendChild($rss);//говорим что у дома появился глава семьи
+        $title = $dom->createElement('title','News');//создаем новый элемент
+        $rss->appendChild($title);//говорит это мой ребенок
+        foreach ($array_news as $value) {
+            $item = $dom->createElement('item');//создаем новый элемент
+
+            $iTitle = $dom->createElement('title',$value[0]);//создаем новый элемент
+            $iUrl = $dom->createElement('url',$value[1]);//создаем новый элемент
+            $iDescription = $dom->createElement('description',$value[2]);//создаем новый элемент
+            $iCreated_at = $dom->createElement('created_at',$value[3]);//создаем новый элемент
+
+            $item->appendChild($iTitle);//говорит что у него тоже есть дети.Их дед $rss
+            $item->appendChild($iUrl);//говорит что у него тоже есть дети.Их дед $rss
+            $item->appendChild($iDescription);//говорит что у него тоже есть дети.Их дед $rss
+            $item->appendChild($iCreated_at);//говорит что у него тоже есть дети.Их дед $rss
+
+            $rss->appendChild($item);
         }
+        $dom->save('rss_tape.xml');
+
     }
 }
-
+$rssNew = new RssNews();
+$rssNew->buildsRss($new);
 
 
