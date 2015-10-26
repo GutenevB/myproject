@@ -10,9 +10,7 @@
 #   `description` VARCHAR(100) NOT NULL ,
 #   `created_at` DATETIME NOT NULL
 # );
-/**
- *
-2.Создать класс News с методами:
+/**2.Создать класс News с методами:
 ­saveNews ­ сохранение новости в БД
 ­getNews ­ получение новостей из БД
  */
@@ -33,13 +31,13 @@ class News
         if ($save){
             $text = "Новость добавлена  " . date('d:m:Y H:i:s') . "\r";
             $open = fopen("register_news.txt","a+");
-            $write= fwrite($open,$text);
+            fwrite($open,$text);
             fclose($open);
             return true;
         }else{
             $text = "Ошибка  " . $this->getError(). "\r";
             $open = fopen("error.txt","a+");
-            $write= fwrite($open,$text);
+            fwrite($open,$text);
             fclose($open);
             return false;
         }
@@ -61,9 +59,10 @@ $new= new News();
  */
 class RssNews
 {
+
     public function buildsRss(News $news)
     {
-        $array_news = $news->getNews();
+        $array_news = $news->getNews();// DI Dependency Injection
         $dom = new DOMDocument('1.0', 'utf-8');
         $dom -> formatOutput = true;// создает отступы и дополняет пробелы
         $rss = $dom->createElement('rss');//создает новый элемент
@@ -85,11 +84,68 @@ class RssNews
 
             $rss->appendChild($item);
         }
-        $dom->save('rss_tape.xml');
+        return $dom->save('rss_tape.xml');
 
     }
-}
-$rssNew = new RssNews();
-$rssNew->buildsRss($new);
 
+    /** Метод - domToArray содрал с мануала)не все понял.
+     * @param $root getRss()
+     * @return array массив XML
+     */
+    function domToArray ($root)
+    {
+        $result = array();
+        if ($root->hasAttributes())
+        {
+            $attrs = $root->attributes;
+            foreach ($attrs as $i => $attr)
+                $result[$attr->name] = $attr->value;
+        }
+        $children = $root->childNodes;
+        if (is_object($children)) {
+            if ($children->length == 1)
+            {
+                $child = $children->item(0);
+                if ($child->nodeType == XML_TEXT_NODE)
+                {
+                    $result['_value'] = $child->nodeValue;
+                    if (count($result) == 1)
+                        return $result['_value'];
+                    else
+                        return $result;
+                }
+            }
+            $group = array();
+            for($i = 0; $i < $children->length; $i++)
+            {
+                $child = $children->item($i);
+                if (!isset($result[$child->nodeName]))
+                    $result[$child->nodeName] = $this->domToArray($child);
+                else
+                {
+                    if (!isset($group[$child->nodeName]))
+                    {
+                        $tmp = $result[$child->nodeName];
+                        $result[$child->nodeName] = array($tmp);
+                        $group[$child->nodeName] = 1;
+                    }
+                    $result[$child->nodeName][] = $this->domToArray($child);
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @return array Вывод массива
+     */
+    public function getRss()
+    {
+        $domm = new DOMDocument();
+        $domm->load('rss_tape.xml');
+        return $this->domToArray($domm);
+    }
+}
+//$rssNew = new RssNews();
+//$rssNew->buildsRss($new);
 
